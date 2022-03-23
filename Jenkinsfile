@@ -1,26 +1,16 @@
-
 pipeline {
 
     agent {
         node {
-            label 'SLAVE01'
+            label 'main'
         }
-    }
-
-    tools { 
-        maven 'maven3' 
     }
 
     options {
         buildDiscarder logRotator( 
-                    daysToKeepStr: '15', 
+                    daysToKeepStr: '16', 
                     numToKeepStr: '10'
             )
-    }
-
-    environment {
-        APP_NAME = "DCUBE_APP"
-        APP_ENV  = "DEV"
     }
 
     stages {
@@ -29,7 +19,7 @@ pipeline {
             steps {
                 cleanWs()
                 sh """
-                echo "Cleaned Up Workspace for ${APP_NAME}"
+                echo "Cleaned Up Workspace For Project"
                 """
             }
         }
@@ -38,22 +28,39 @@ pipeline {
             steps {
                 checkout([
                     $class: 'GitSCM', 
-                    branches: [[name: '*/master']], 
+                    branches: [[name: '*/main']], 
                     userRemoteConfigs: [[url: 'https://github.com/spring-projects/spring-petclinic.git']]
                 ])
             }
         }
 
-        stage('Code Build') {
+        stage(' Unit Testing') {
             steps {
-                 sh 'mvn install -Dmaven.test.skip=true'
+                sh """
+                echo "Running Unit Tests"
+                """
             }
         }
 
-        stage('Priting All Global Variables') {
+        stage('Code Analysis') {
             steps {
                 sh """
-                env
+                echo "Running Code Analysis"
+                """
+            }
+        }
+
+        stage('Build Deploy Code') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                sh """
+                echo "Building Artifact"
+                """
+
+                sh """
+                echo "Deploying Code"
                 """
             }
         }
